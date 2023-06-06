@@ -17,7 +17,7 @@ module.exports = {
     },
 
     sepolia:{
-      provider : function() {return new HDWalletProvider({mnemonic:{phrase:`${process.env.SEED}`},providerOrUrl:`https://sepolia.infura.io/v3/${process.env.INFURA_ID}`})},
+      provider : function() {return new HDWalletProvider({mnemonic:{phrase:`${process.env.SEED}`},providerOrUrl:`https://sepolia.infura.io/v3/${process.env.SEPOLIA_ID}`})},
       network_id:11155111,
       },
 
