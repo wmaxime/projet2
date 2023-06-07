@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.13;
-import access/Ownable.sol";
+pragma solidity 0.8.20;
+import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract Voting is Ownable {
 
-    uint[] winningProposalsID;
-    Proposal[] winningProposals;
+    uint public winningProposalID;
     
     struct Voter {
         bool isRegistered;
@@ -38,7 +37,7 @@ contract Voting is Ownable {
     event WorkflowStatusChange(WorkflowStatus previousStatus, WorkflowStatus newStatus);
     event ProposalRegistered(uint proposalId);
     event Voted (address voter, uint proposalId);
-
+    
     modifier onlyVoters() {
         require(voters[msg.sender].isRegistered, "You're not a voter");
         _;
@@ -67,17 +66,10 @@ contract Voting is Ownable {
         emit VoterRegistered(_addr);
     }
  
-    
-    function deleteVoter(address _addr) external onlyOwner {
-        require(workflowStatus == WorkflowStatus.RegisteringVoters, 'Voters registration is not open yet');
-        require(voters[_addr].isRegistered == true, 'Not registered.');
-        voters[_addr].isRegistered = false;
-        emit VoterRegistered(_addr);
-    }
 
     // ::::::::::::: PROPOSAL ::::::::::::: // 
 
-    function addProposal(string memory _desc) external onlyVoters {
+    function addProposal(string calldata _desc) external onlyVoters {
         require(workflowStatus == WorkflowStatus.ProposalsRegistrationStarted, 'Proposals are not allowed yet');
         require(keccak256(abi.encode(_desc)) != keccak256(abi.encode("")), 'Vous ne pouvez pas ne rien proposer'); // facultatif
         // voir que desc est different des autres
@@ -104,77 +96,48 @@ contract Voting is Ownable {
 
     // ::::::::::::: STATE ::::::::::::: //
 
-    modifier checkWorkflowStatus(uint  _num) {
-        require (workflowStatus==WorkflowStatus(uint(_num)-1), "bad workflowstatus");
-        require (_num != 5, "il faut lancer tally votes");
-        _;
-      }
-    
-    function setWorkflowStatus(uint _num) external checkWorkflowStatus(_num) onlyOwner {
-        WorkflowStatus old = workflowStatus;
-        workflowStatus = WorkflowStatus(_num);
-        emit WorkflowStatusChange(old, workflowStatus);
-       } 
-    
-    //ou 
 
-    function nextWorkflowStatus() external onlyOwner{
-        require (uint(workflowStatus)!=4, "il faut lancer tallyvotes");
-        WorkflowStatus old = workflowStatus;
-        workflowStatus= WorkflowStatus(uint (workflowStatus) + 1);
-        emit WorkflowStatusChange(old, workflowStatus);
-    }
+    function startProposalsRegistering() external onlyOwner {
+        require(workflowStatus == WorkflowStatus.RegisteringVoters, 'Registering proposals cant be started now');
+        workflowStatus = WorkflowStatus.ProposalsRegistrationStarted;
         
+        Proposal memory proposal;
+        proposal.description = "GENESIS";
+        proposalsArray.push(proposal);
+        
+        emit WorkflowStatusChange(WorkflowStatus.RegisteringVoters, WorkflowStatus.ProposalsRegistrationStarted);
+    }
 
-    function tallyVotesDraw() external onlyOwner returns (uint[] memory){
+    function endProposalsRegistering() external onlyOwner {
+        require(workflowStatus == WorkflowStatus.ProposalsRegistrationStarted, 'Registering proposals havent started yet');
+        workflowStatus = WorkflowStatus.ProposalsRegistrationEnded;
+        emit WorkflowStatusChange(WorkflowStatus.ProposalsRegistrationStarted, WorkflowStatus.ProposalsRegistrationEnded);
+    }
+
+    function startVotingSession() external onlyOwner {
+        require(workflowStatus == WorkflowStatus.ProposalsRegistrationEnded, 'Registering proposals phase is not finished');
+        workflowStatus = WorkflowStatus.VotingSessionStarted;
+        emit WorkflowStatusChange(WorkflowStatus.ProposalsRegistrationEnded, WorkflowStatus.VotingSessionStarted);
+    }
+
+    function endVotingSession() external onlyOwner {
+        require(workflowStatus == WorkflowStatus.VotingSessionStarted, 'Voting session havent started yet');
+        workflowStatus = WorkflowStatus.VotingSessionEnded;
+        emit WorkflowStatusChange(WorkflowStatus.VotingSessionStarted, WorkflowStatus.VotingSessionEnded);
+    }
+
+
+   function tallyVotes() external onlyOwner {
        require(workflowStatus == WorkflowStatus.VotingSessionEnded, "Current status is not voting session ended");
-        uint highestCount;
-        uint nbWinners;
-        uint temp;
-        for (uint i = 0; i < proposalsArray.length; i++) {
-            if (proposalsArray[i].voteCount == highestCount) {
-                nbWinners++;
-            }
-            if (proposalsArray[i].voteCount > highestCount) {
-                highestCount = proposalsArray[i].voteCount;
-                nbWinners=1;
-            }
-        }
-        uint[] memory winners = new uint[](nbWinners);
-
-        for (uint h=0; h< proposalsArray.length; h++) {
-            if (proposalsArray[h].voteCount == highestCount) {
-                winners[temp] = h;
-                temp++;
-            }
-        }
-        workflowStatus = WorkflowStatus.VotesTallied;
-        emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
-
-        return winners;
+       uint _winningProposalId;
+      for (uint256 p = 0; p < proposalsArray.length; p++) {
+           if (proposalsArray[p].voteCount > proposalsArray[_winningProposalId].voteCount) {
+               _winningProposalId = p;
+          }
+       }
+       winningProposalID = _winningProposalId;
+       
+       workflowStatus = WorkflowStatus.VotesTallied;
+       emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
     }
-
-
-// ou
-    function tallyDraw() external onlyOwner{
-       require(workflowStatus == WorkflowStatus.VotingSessionEnded, "Current status is not voting session ended");
-        uint highestCount;
-        
-        for (uint i = 0; i < proposalsArray.length; i++) {
-            if (proposalsArray[i].voteCount > highestCount) {
-                highestCount = proposalsArray[i].voteCount;
-            }
-        }
-        
-        for (uint j = 0; j < proposalsArray.length; j++) {
-            if (proposalsArray[j].voteCount == highestCount) {
-                winningProposalsID.push(j);
-            }
-        }
-
-        workflowStatus = WorkflowStatus.VotesTallied;
-        emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
-
-    }
-
 }
