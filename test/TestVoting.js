@@ -2,11 +2,29 @@ const Voting = artifacts.require("Voting");
 const { BN, expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
-contract('SimpleStorage', accounts => {
+contract('Voting', accounts => {
     const owner = accounts[0];
-    const second = accounts[1];
-    const third = accounts[2];
+    const voter1 = accounts[1];
+    const voter2 = accounts[2];
+    const voter3 = accounts[3];
 
+    let VotingInstance
+
+    // Check deployed contract address, check first workflow status is RegisteringVoters
+    describe("Check des GETTERS", function () {
+
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+            await VotingInstance.addVoter(voter1);
+        });
+
+        it("should revert if not voter", function () {
+            expectRevert(VotingInstance.getVoter(voter1), "You're not a voter");
+        });
+
+     }); 
+
+    /*
     let StorageInstance;
 
     describe("test require and event", function () {
@@ -34,4 +52,6 @@ contract('SimpleStorage', accounts => {
 
         });
     });
+*/
+
 });
