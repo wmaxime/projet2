@@ -7,6 +7,7 @@ contract('Voting', accounts => {
     const voter1 = accounts[1];
     const voter2 = accounts[2];
     const voter3 = accounts[3];
+    //console.log("Address voter 3 : " + voter3)
 
     let VotingInstance
 
@@ -15,43 +16,44 @@ contract('Voting', accounts => {
 
         beforeEach(async function () {
             VotingInstance = await Voting.new({from:owner});
-            await VotingInstance.addVoter(voter1);
+            //await VotingInstance.addVoter(voter1, {from: owner});
+            //await VotingInstance.getVoter(voter1, {from: voter1});
         });
 
-        it("should revert if not voter", function () {
-            expectRevert(VotingInstance.getVoter(voter1), "You're not a voter");
+        it("Only voter can get voter status", async () => {
+            await VotingInstance.addVoter(voter1, {from: owner});
+            let getVoter = await VotingInstance.getVoter(voter1, {from: voter1});
+            //console.log("GET INSTANCE RESULT = " + getVoter.isRegistered);
+            expect(getVoter.isRegistered).to.be.true;
+            //expectRevert(getVoter, "You're not a voter");
         });
+
+        it("Only voter can get proposal", async () => {
+            let description = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description, {from: voter1});
+            let getProposal = await VotingInstance.getOneProposal(1, {from: voter1});
+            //console.log("GET INSTANCE RESULT = " + getProposal.description);
+            expect(getProposal.description).to.be.equal(description);
+        });    
 
      }); 
 
-    /*
-    let StorageInstance;
+     // Check REGISTRATION
+ /*    describe("Check Registration", function () {
 
-    describe("test require and event", function () {
-        
-        context("test sur telle fonction", function () {
-
-            beforeEach(async function () {
-                StorageInstance = await SimpleStorage.new({from:owner});
-            });
-
-            it("should verify require pass", async () => {
-                await StorageInstance.set(8, { from: owner });
-                const storedData = await StorageInstance.get();
-                expect(storedData).to.be.bignumber.equal(BN(8));
-            });
-
-            it("should verify require not passing", async () => {
-                await expectRevert(StorageInstance.set(42, { from: owner }), 'pas bon'); 
-            });
-
-            it("should verify event", async () => {
-                const findEvent = await StorageInstance.set(8, { from: owner });
-                expectEvent(findEvent,"Setted" ,{_value: BN(8)});
-            });
-
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+            await VotingInstance.addVoter(voter1, {from: owner});
         });
-    });
+
+        it("Only Owner can add voter", async () => {
+            //await VotingInstance.addVoter(voter1, {from: voter2});
+            await expectRevert(VotingInstance.addVoter(voter2, {from: owner}), "You're not allowed to add voter");
+        });
+
+     });
 */
 
 });
