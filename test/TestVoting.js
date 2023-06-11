@@ -185,6 +185,22 @@ contract('Voting', accounts => {
             await expectRevert(VotingInstance.setVote(999, {from: voter1}), "Proposal not found");
         });
 
+        it("Vote count of proposal should increment", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.addVoter(voter2, {from: owner});
+            await VotingInstance.addVoter(voter3, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.setVote(1, {from: voter1});
+            await VotingInstance.setVote(1, {from: voter2});
+            await VotingInstance.setVote(1, {from: voter3});
+            const storedData = await VotingInstance.getOneProposal(1, {from: voter1});
+            expect(storedData.voteCount).to.be.bignumber.equal(new BN(3));
+        });
+
         // Ajouter les EMIT
          it("Check Emit : Voted", async () => {
             let description1 = "Poposal one"
