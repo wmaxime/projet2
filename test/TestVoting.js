@@ -352,4 +352,72 @@ contract('Voting', accounts => {
 
 });
 
+   // Check tallyVotes
+   describe("Check TALLYVOTES", function () {
+
+    context("test fonction : tallyVotes", function () {
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+        });
+
+        it("Only owner can tally votes", async () => {
+            await expectRevert(VotingInstance.tallyVotes({from: voter2}), "Ownable: caller is not the owner");
+        });
+
+        it("Require : WorkflowStatus not good to tally votes", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await expectRevert(VotingInstance.tallyVotes({from: owner}), "Current status is not voting session ended");
+        });
+
+        it("winningProposalId should be ZERO before anything", async () => {
+            const winnerProposalId = await VotingInstance.winningProposalID.call();
+            expect(winnerProposalId).to.be.bignumber.equal(new BN(0));
+        });
+
+        it("should be able to count votes and return winningProposalId", async () => {
+            let description1 = "Poposal one"
+            let description2 = "Poposal two"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.addVoter(voter2, {from: owner});
+            await VotingInstance.addVoter(voter3, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.addProposal(description2, {from: voter2});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.setVote(1, {from: voter1});
+            await VotingInstance.setVote(2, {from: voter2});
+            await VotingInstance.setVote(2, {from: voter3});    // Proposal 2 is winner
+            await VotingInstance.endVotingSession({from: owner});
+
+            await VotingInstance.tallyVotes({from: owner});
+            const winnerProposalId = await VotingInstance.winningProposalID.call();
+            expect(winnerProposalId).to.be.bignumber.equal(new BN(2));  // should return proposal 2
+        });
+
+        it("Changing status to VotesTallied should return status index 5", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.endVotingSession({from: owner});
+            await VotingInstance.tallyVotes({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(5));
+        });
+
+        // Ajouter les EMIT
+        it("Check Emit : WorkflowStatusChange", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.endVotingSession({from: owner});
+            const findEvent = await VotingInstance.tallyVotes({from: owner});
+            expectEvent(findEvent,"WorkflowStatusChange" ,{previousStatus: new BN(4), newStatus: new BN(5)});
+        });
+
+    });
+});
+
 });
