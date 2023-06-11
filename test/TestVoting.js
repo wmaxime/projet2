@@ -211,4 +211,29 @@ contract('Voting', accounts => {
 
     });
 
+   // Check STATE
+   describe("Check STATE", function () {
+
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+        });
+
+        it("Check first status : RegisteringVoters", async () => {
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(new BN(storedData)).to.be.bignumber.equal(new BN(0));
+        });
+
+        it("Only owner can change state : startProposalsRegistering", async () => {
+            await expectRevert(VotingInstance.startProposalsRegistering({from: voter2}), "Ownable: caller is not the owner");
+        });
+
+        it("Require : precedent status should be RegisteringVoters", async () => {
+            //await VotingInstance.workflowStatus({from: owner});
+            const storedData = await VotingInstance.startProposalsRegistering({from: owner});
+            expect(new BN(storedData)).to.be.bignumber.equal(new BN(1));
+           // await expectRevert(VotingInstance.startProposalsRegistering({from: owner}), "Proposal not found");
+
+        });        
+
+    });
 });
