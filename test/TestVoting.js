@@ -100,6 +100,13 @@ contract('Voting', accounts => {
         });
 
          // Ajouter les EMIT
+         it("Check Emit : ProposalRegistered", async () => {
+            let description = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            const findEvent = await VotingInstance.addProposal(description, {from: voter1});
+            expectEvent(findEvent,"ProposalRegistered" ,{proposalId: BN(1)});
+        });
 
      });
 
