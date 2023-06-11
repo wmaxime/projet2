@@ -72,10 +72,25 @@ contract('Voting', accounts => {
             VotingInstance = await Voting.new({from:owner});
         });
 
-        it("Only voter can add proposal", async () => {
-            await expectRevert(VotingInstance.addVoter(voter1, {from: voter2}), "Ownable: caller is not the owner"); 
-            // expectRevert => Si le test ne passe pas le message erreur doit etre identique sinon le retour erreur n'est pas identique et le test ne passe pas
-            // l'instance doit ne pas passer pour que le test résussisse
+        it("Only voters can vote", async () => {
+            let description = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await expectRevert(VotingInstance.addProposal(description, {from: voter2}), "You're not a voter");
+        });
+
+        it("Require : Workflow not good to add proposal", async () => {
+            let description = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            //await VotingInstance.startProposalsRegistering({from: owner});
+            await expectRevert(VotingInstance.addProposal(description, {from: voter1}), "Proposals are not allowed yet");
+        });
+
+        it("Require : Empty proposal not authorize", async () => {
+            let description = ""
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await expectRevert(VotingInstance.addProposal(description, {from: voter1}), "Vous ne pouvez pas ne rien proposer");
         });
 
      });
