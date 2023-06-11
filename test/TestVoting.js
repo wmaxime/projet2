@@ -281,6 +281,75 @@ contract('Voting', accounts => {
         });
     });
 
+    context("test fonction : startVotingSession", function () {
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+        });
+
+        it("Only owner can change state : startVotingSession", async () => {
+            await expectRevert(VotingInstance.startVotingSession({from: voter1}), "Ownable: caller is not the owner");
+        });
+
+        it("Require : precedent status should be ProposalsRegistrationEnded (Index 2)", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(2));
+        });
+
+        it("Changing status to startVotingSession should return status index 3", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(3));
+        });
+
+        // Ajouter les EMIT
+        it("Check Emit : WorkflowStatusChange", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            const findEvent = await VotingInstance.startVotingSession({from: owner});
+            expectEvent(findEvent,"WorkflowStatusChange" ,{previousStatus: new BN(2), newStatus: new BN(3)});
+        });
+    });
+
+    context("test fonction : endVotingSession", function () {
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+        });
+
+        it("Only owner can change state : endVotingSession", async () => {
+            await expectRevert(VotingInstance.endVotingSession({from: voter1}), "Ownable: caller is not the owner");
+        });
+
+        it("Require : precedent status should be startVotingSession (Index 3)", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(3));
+        });
+
+        it("Changing status to endVotingSession should return status index 4", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.endVotingSession({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(4));
+        });
+
+        // Ajouter les EMIT
+        it("Check Emit : WorkflowStatusChange", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            const findEvent = await VotingInstance.endVotingSession({from: owner});
+            expectEvent(findEvent,"WorkflowStatusChange" ,{previousStatus: new BN(3), newStatus: new BN(4)});
+        });
+    });
+
 });
 
 });
