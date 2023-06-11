@@ -137,5 +137,78 @@ contract('Voting', accounts => {
 
      });
 
+   // Check VOTE
+   describe("Check VOTE", function () {
+
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+        });
+
+        it("Only voters can vote", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await expectRevert(VotingInstance.setVote(1, {from: voter2}), "You're not a voter");
+        });
+
+        it("Require : WorkflowStatus not good to vote", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            //await VotingInstance.startVotingSession({from: owner});
+            await expectRevert(VotingInstance.setVote(1, {from: voter1}), "Voting session havent started yet");
+        });
+
+        it("Require : Voter has already voted", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.setVote(1, {from: voter1});
+            await expectRevert(VotingInstance.setVote(1, {from: voter1}), "You have already voted");
+        });
+
+        it("Require : Proposal must exist", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await expectRevert(VotingInstance.setVote(999, {from: voter1}), "Proposal not found");
+        });
+
+        // Ajouter les EMIT
+         it("Check Emit : Voted", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            const findEvent = await VotingInstance.setVote(1, {from: voter1});
+            expectEvent(findEvent,"Voted" ,{proposalId: BN(1)});
+        });
+
+        it("should be able to vote for a proposal", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.setVote(1, {from: voter1});
+            const storedData = await VotingInstance.getOneProposal(1, {from: voter1});
+            expect(storedData.voteCount).to.be.bignumber.equal(new BN(1));
+        });
+
+    });
 
 });
