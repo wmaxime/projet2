@@ -251,6 +251,36 @@ contract('Voting', accounts => {
         });
     });
 
+    context("test fonction : endProposalsRegistering", function () {
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+        });
+
+        it("Only owner can change state : endProposalsRegistering", async () => {
+            await expectRevert(VotingInstance.endProposalsRegistering({from: voter1}), "Ownable: caller is not the owner");
+        });
+
+        it("Require : precedent status should be ProposalsRegistrationStarted (Index 1)", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(1));
+        });
+
+        it("Changing status to endProposalsRegistering should return status index 2", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(2));
+        });
+
+        // Ajouter les EMIT
+        it("Check Emit : WorkflowStatusChange", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            const findEvent = await VotingInstance.endProposalsRegistering({from: owner});
+            expectEvent(findEvent,"WorkflowStatusChange" ,{previousStatus: new BN(1), newStatus: new BN(2)});
+        });
+    });
+
 });
 
 });
