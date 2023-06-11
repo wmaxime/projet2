@@ -214,26 +214,43 @@ contract('Voting', accounts => {
    // Check STATE
    describe("Check STATE", function () {
 
+    context("test fonction : startProposalsRegistering", function () {
         beforeEach(async function () {
             VotingInstance = await Voting.new({from:owner});
-        });
-
-        it("Check first status : RegisteringVoters", async () => {
-            const storedData = await VotingInstance.workflowStatus({from: owner});
-            expect(new BN(storedData)).to.be.bignumber.equal(new BN(0));
         });
 
         it("Only owner can change state : startProposalsRegistering", async () => {
             await expectRevert(VotingInstance.startProposalsRegistering({from: voter2}), "Ownable: caller is not the owner");
         });
 
-        it("Require : precedent status should be RegisteringVoters", async () => {
-            //await VotingInstance.workflowStatus({from: owner});
-            const storedData = await VotingInstance.startProposalsRegistering({from: owner});
-            expect(new BN(storedData)).to.be.bignumber.equal(new BN(1));
-           // await expectRevert(VotingInstance.startProposalsRegistering({from: owner}), "Proposal not found");
+        it("Require : precedent status should be RegisteringVoters (Index 0)", async () => {
+            //let status = await VotingInstance.workflowStatus({from: owner});
+            //console.log("STATUS VALUE = " + status)
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(0));
+        });
 
-        });        
+        it("Changing status to startProposalsRegistering should return status index 1", async () => {
+            await VotingInstance.startProposalsRegistering({from: owner});
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(1));
+        });
 
+        it("Function should return for proposal index 0 a description GENESIS", async () => {
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            const storedData = await VotingInstance.getOneProposal(0, {from: voter1});
+            expect(storedData.description).to.be.equal("GENESIS");
+        });
+
+        // Ajouter les EMIT
+        it("Check Emit : WorkflowStatusChange", async () => {
+            const findEvent = await VotingInstance.startProposalsRegistering({from: owner});
+            expectEvent(findEvent,"WorkflowStatusChange" ,{previousStatus: new BN(0), newStatus: new BN(1)});
+            //expectEvent(findEvent,"WorkflowStatusChange" ,{newStatus: BN(1)});
+        });
     });
+
+});
+
 });
