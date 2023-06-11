@@ -63,6 +63,12 @@ contract('Voting', accounts => {
             await expectRevert(VotingInstance.addVoter(voter1, {from: owner}), "Already registered");
         });
 
+        // Ajouter les EMIT ou check des EVENT
+        it("Check Emit : VoterRegistered", async () => {
+            const findEvent = await VotingInstance.addVoter(voter1, {from: owner});
+            expectEvent(findEvent,"VoterRegistered" ,{voterAddress: voter1}); // L'ecriture de la condition doit passer pour valider le test
+        });
+
      });
 
     // Check PROPOSAL
@@ -92,6 +98,8 @@ contract('Voting', accounts => {
             await VotingInstance.startProposalsRegistering({from: owner});
             await expectRevert(VotingInstance.addProposal(description, {from: voter1}), "Vous ne pouvez pas ne rien proposer");
         });
+
+         // Ajouter les EMIT
 
      });
 
