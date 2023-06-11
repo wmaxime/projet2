@@ -20,15 +20,27 @@ contract('Voting', accounts => {
             //await VotingInstance.getVoter(voter1, {from: voter1});
         });
 
-        it("Only voter can get voter status", async () => {
+        it("Only Voter can get other Voter status ", async () => {
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await expectRevert(VotingInstance.getVoter(voter1, {from: voter2}), "You're not a voter");
+        });
+
+        it("Check Voter is registred", async () => {
             await VotingInstance.addVoter(voter1, {from: owner});
             let getVoter = await VotingInstance.getVoter(voter1, {from: voter1});
             //console.log("GET INSTANCE RESULT = " + getVoter.isRegistered);
             expect(getVoter.isRegistered).to.be.true;
-            //expectRevert(getVoter, "You're not a voter");
         });
 
-        it("Only voter can get proposal", async () => {
+        it("Only Voter can get proposal ", async () => {
+            let description = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description, {from: voter1});
+            await expectRevert(VotingInstance.getOneProposal(1, {from: voter2}), "You're not a voter");
+        });
+
+        it("Check proposal is registred", async () => {
             let description = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
             await VotingInstance.startProposalsRegistering({from: owner});
@@ -69,6 +81,12 @@ contract('Voting', accounts => {
             expectEvent(findEvent,"VoterRegistered" ,{voterAddress: voter1}); // L'ecriture de la condition doit passer pour valider le test
         });
 
+        it("should add a voter", async () => {
+            await VotingInstance.addVoter(voter1, {from: owner});
+            const storedData = await VotingInstance.getVoter(voter1, {from: voter1});
+            expect(storedData.isRegistered).to.be.true;
+        });
+
      });
 
     // Check PROPOSAL
@@ -78,7 +96,7 @@ contract('Voting', accounts => {
             VotingInstance = await Voting.new({from:owner});
         });
 
-        it("Only voters can vote", async () => {
+        it("Only voters can add proposal", async () => {
             let description = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
             await VotingInstance.startProposalsRegistering({from: owner});
@@ -106,6 +124,15 @@ contract('Voting', accounts => {
             await VotingInstance.startProposalsRegistering({from: owner});
             const findEvent = await VotingInstance.addProposal(description, {from: voter1});
             expectEvent(findEvent,"ProposalRegistered" ,{proposalId: BN(1)});
+        });
+
+        it("should add a proposal", async () => {
+            let description = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description, {from: voter1});
+            const storedData = await VotingInstance.getOneProposal(1, {from: voter1});
+            expect(storedData.description).to.equal(description);
         });
 
      });
