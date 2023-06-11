@@ -29,7 +29,12 @@ module.exports = {
   },
 
   mocha: {
-
+    reporter: 'eth-gas-reporter',
+    reporterOptions: {
+      gasPrice: 1,
+      token: 'ETH',
+      showTimeSpent: true,
+    }
   },
 
   compilers: {
