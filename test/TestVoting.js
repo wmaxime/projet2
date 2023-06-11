@@ -49,6 +49,31 @@ contract('Voting', accounts => {
 
         it("Only Owner can add voter", async () => {
             await expectRevert(VotingInstance.addVoter(voter1, {from: voter2}), "Ownable: caller is not the owner"); 
+            // expectRevert => Le message d'erreur doit etre identique sinon le message de retour d'erreur n'est pas identique et le test ne passe pas
+            // l'écriture de la condition ne doit pas passer pour que le test résussisse
+        });
+
+        it("Require : WorkflowStatus not good to add voter", async () => {
+            await VotingInstance.startProposalsRegistering(); // Changement du status
+            await expectRevert(VotingInstance.addVoter(voter1, {from: owner}), "Voters registration is not open yet");
+        });
+
+        it("Require : Voter is not already registred", async () => {
+            await VotingInstance.addVoter(voter1, {from: owner}) // Add first the voter, so he is already registred
+            await expectRevert(VotingInstance.addVoter(voter1, {from: owner}), "Already registered");
+        });
+
+     });
+
+    // Check PROPOSAL
+    describe("Check PROPOSAL", function () {
+
+        beforeEach(async function () {
+            VotingInstance = await Voting.new({from:owner});
+        });
+
+        it("Only voter can add proposal", async () => {
+            await expectRevert(VotingInstance.addVoter(voter1, {from: voter2}), "Ownable: caller is not the owner"); 
             // expectRevert => Si le test ne passe pas le message erreur doit etre identique sinon le retour erreur n'est pas identique et le test ne passe pas
             // l'instance doit ne pas passer pour que le test résussisse
         });
