@@ -20,7 +20,7 @@ contract('Voting', accounts => {
             //await VotingInstance.getVoter(voter1, {from: voter1});
         });
 
-        it("Only Voter can get other Voter status ", async () => {
+        it("Only Voter can get other Voter status", async () => {
             await VotingInstance.addVoter(voter1, {from: owner});
             await expectRevert(VotingInstance.getVoter(voter1, {from: voter2}), "You're not a voter");
         });

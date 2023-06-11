@@ -12,7 +12,7 @@ Vous devez alors fournir les tests unitaires de votre smart contract Nous n’at
 
 Le fichier de test est ordonné pour suivre le déroulement du contrat Voting.sol en respectant la vérification des droits, des requires, des events :
 
-1- Test des GETTERS
+1- Test des GETTERS : fonctions getVoter(address) et getOneProposal(id_proposal)
 
 2- Test de l'étape REGISTRATION : fonction addVoter(address)
 
