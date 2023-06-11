@@ -41,19 +41,19 @@ contract('Voting', accounts => {
      }); 
 
      // Check REGISTRATION
- /*    describe("Check Registration", function () {
+     describe("Check REGISTRATION", function () {
 
         beforeEach(async function () {
             VotingInstance = await Voting.new({from:owner});
-            await VotingInstance.addVoter(voter1, {from: owner});
         });
 
         it("Only Owner can add voter", async () => {
-            //await VotingInstance.addVoter(voter1, {from: voter2});
-            await expectRevert(VotingInstance.addVoter(voter2, {from: owner}), "You're not allowed to add voter");
+            await expectRevert(VotingInstance.addVoter(voter1, {from: voter2}), "Ownable: caller is not the owner"); 
+            // expectRevert => Si le test ne passe pas le message erreur doit etre identique sinon le retour erreur n'est pas identique et le test ne passe pas
+            // l'instance doit ne pas passer pour que le test résussisse
         });
 
      });
-*/
+
 
 });
