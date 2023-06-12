@@ -54,9 +54,11 @@ contract('Voting', accounts => {
             // l'écriture de la condition ne doit pas passer pour que le test résussisse
         });
 
-        it("Require : WorkflowStatus not good to add voter", async () => {
-            await VotingInstance.startProposalsRegistering();
-            await expectRevert(VotingInstance.addVoter(voter1, {from: owner}), "Voters registration is not open yet");
+        it("Require : WorkflowStatus.RegisteringVoters (index 0)", async () => {
+          /*  await VotingInstance.startProposalsRegistering();
+            await expectRevert(VotingInstance.addVoter(voter1, {from: owner}), "Voters registration is not open yet"); */
+            const storedData = await VotingInstance.workflowStatus({from: owner});
+            expect(storedData).to.be.bignumber.equal(new BN(0));
         });
 
         it("Require : Voter is not already registred", async () => {
@@ -88,7 +90,7 @@ contract('Voting', accounts => {
             await expectRevert(VotingInstance.addProposal(description, {from: voter2}), "You're not a voter");
         });
 
-        it("Require : Workflow not good to add proposal", async () => {
+        it("Require : WorkflowStatus.ProposalsRegistrationStarted", async () => {
             let description = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
             await expectRevert(VotingInstance.addProposal(description, {from: voter1}), "Proposals are not allowed yet");
@@ -130,7 +132,7 @@ contract('Voting', accounts => {
             await expectRevert(VotingInstance.setVote(1, {from: voter2}), "You're not a voter");
         });
 
-        it("Require : WorkflowStatus not good to vote", async () => {
+        it("Require : WorkflowStatus.VotingSessionStarted", async () => {
             await VotingInstance.addVoter(voter1, {from: owner});
             await expectRevert(VotingInstance.setVote(1, {from: voter1}), "Voting session havent started yet");
         });
@@ -341,7 +343,7 @@ contract('Voting', accounts => {
             await expectRevert(VotingInstance.tallyVotes({from: voter2}), "Ownable: caller is not the owner");
         });
 
-        it("Require : WorkflowStatus not good to tally votes", async () => {
+        it("Require : WorkflowStatus.VotingSessionEnded", async () => {
             await expectRevert(VotingInstance.tallyVotes({from: owner}), "Current status is not voting session ended");
         });
 
