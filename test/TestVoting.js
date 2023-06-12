@@ -185,7 +185,7 @@ contract('Voting', accounts => {
             expectEvent(findEvent,"Voted" ,{proposalId: BN(1)});
         });
 
-        it("should be able to vote for a proposal", async () => {
+        it("Proposal VoteCount should increase", async () => {
             let description1 = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
             await VotingInstance.startProposalsRegistering({from: owner});
@@ -195,6 +195,30 @@ contract('Voting', accounts => {
             await VotingInstance.setVote(1, {from: voter1});
             const storedData = await VotingInstance.getOneProposal(1, {from: voter1});
             expect(storedData.voteCount).to.be.bignumber.equal(new BN(1));
+        });
+
+        it("Voter should have property Hasvoted to be True", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.setVote(1, {from: voter1});
+            const storedData = await VotingInstance.getVoter(voter1, {from: voter1});
+            expect(storedData.hasVoted).to.be.true;
+        });
+
+        it("Voter should have property votedProposalId set to Proposal Id 1", async () => {
+            let description1 = "Poposal one"
+            await VotingInstance.addVoter(voter1, {from: owner});
+            await VotingInstance.startProposalsRegistering({from: owner});
+            await VotingInstance.addProposal(description1, {from: voter1});
+            await VotingInstance.endProposalsRegistering({from: owner});
+            await VotingInstance.startVotingSession({from: owner});
+            await VotingInstance.setVote(1, {from: voter1});
+            const storedData = await VotingInstance.getVoter(voter1, {from: voter1});
+            expect(storedData.votedProposalId).to.be.bignumber.equal(new BN(1));
         });
 
     });
