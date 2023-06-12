@@ -41,7 +41,7 @@ contract('Voting', accounts => {
 
      }); 
 
-     // Check REGISTRATION
+
      describe("Check REGISTRATION", function () {
 
         beforeEach(async function () {
@@ -55,19 +55,18 @@ contract('Voting', accounts => {
         });
 
         it("Require : WorkflowStatus not good to add voter", async () => {
-            await VotingInstance.startProposalsRegistering(); // Changement du status
+            await VotingInstance.startProposalsRegistering();
             await expectRevert(VotingInstance.addVoter(voter1, {from: owner}), "Voters registration is not open yet");
         });
 
         it("Require : Voter is not already registred", async () => {
-            await VotingInstance.addVoter(voter1, {from: owner}) // Add first the voter, so he is already registred
+            await VotingInstance.addVoter(voter1, {from: owner})
             await expectRevert(VotingInstance.addVoter(voter1, {from: owner}), "Already registered");
         });
 
-        // Ajouter les EMIT ou check des EVENT
         it("Check Emit : VoterRegistered", async () => {
             const findEvent = await VotingInstance.addVoter(voter1, {from: owner});
-            expectEvent(findEvent,"VoterRegistered" ,{voterAddress: voter1}); // L'ecriture de la condition doit passer pour valider le test
+            expectEvent(findEvent,"VoterRegistered" ,{voterAddress: voter1});
         });
 
         it("should add a voter", async () => {
@@ -78,7 +77,6 @@ contract('Voting', accounts => {
 
      });
 
-    // Check PROPOSAL
     describe("Check PROPOSAL", function () {
 
         beforeEach(async function () {
@@ -103,7 +101,6 @@ contract('Voting', accounts => {
             await expectRevert(VotingInstance.addProposal(description, {from: voter1}), "Vous ne pouvez pas ne rien proposer");
         });
 
-         // Ajouter les EMIT
          it("Check Emit : ProposalRegistered", async () => {
             let description = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
@@ -123,7 +120,6 @@ contract('Voting', accounts => {
 
      });
 
-   // Check VOTE
    describe("Check VOTE", function () {
 
         beforeEach(async function () {
@@ -176,7 +172,6 @@ contract('Voting', accounts => {
             expect(storedData.voteCount).to.be.bignumber.equal(new BN(3));
         });
 
-        // Ajouter les EMIT
          it("Check Emit : Voted", async () => {
             let description1 = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
@@ -202,7 +197,6 @@ contract('Voting', accounts => {
 
     });
 
-   // Check STATE
    describe("Check STATE", function () {
 
     context("test fonction : startProposalsRegistering", function () {
@@ -232,7 +226,6 @@ contract('Voting', accounts => {
             expect(storedData.description).to.be.equal("GENESIS");
         });
 
-        // Ajouter les EMIT
         it("Check Emit : WorkflowStatusChange", async () => {
             const findEvent = await VotingInstance.startProposalsRegistering({from: owner});
             expectEvent(findEvent,"WorkflowStatusChange" ,{previousStatus: new BN(0), newStatus: new BN(1)});
@@ -261,7 +254,6 @@ contract('Voting', accounts => {
             expect(storedData).to.be.bignumber.equal(new BN(2));
         });
 
-        // Ajouter les EMIT
         it("Check Emit : WorkflowStatusChange", async () => {
             await VotingInstance.startProposalsRegistering({from: owner});
             const findEvent = await VotingInstance.endProposalsRegistering({from: owner});
@@ -293,7 +285,6 @@ contract('Voting', accounts => {
             expect(storedData).to.be.bignumber.equal(new BN(3));
         });
 
-        // Ajouter les EMIT
         it("Check Emit : WorkflowStatusChange", async () => {
             await VotingInstance.startProposalsRegistering({from: owner});
             await VotingInstance.endProposalsRegistering({from: owner});
@@ -328,7 +319,6 @@ contract('Voting', accounts => {
             expect(storedData).to.be.bignumber.equal(new BN(4));
         });
 
-        // Ajouter les EMIT
         it("Check Emit : WorkflowStatusChange", async () => {
             await VotingInstance.startProposalsRegistering({from: owner});
             await VotingInstance.endProposalsRegistering({from: owner});
@@ -340,7 +330,6 @@ contract('Voting', accounts => {
 
 });
 
-   // Check tallyVotes
    describe("Check TALLYVOTES", function () {
 
     context("test fonction : tallyVotes", function () {
@@ -392,7 +381,6 @@ contract('Voting', accounts => {
             expect(storedData).to.be.bignumber.equal(new BN(5));
         });
 
-        // Ajouter les EMIT
         it("Check Emit : WorkflowStatusChange", async () => {
             await VotingInstance.startProposalsRegistering({from: owner});
             await VotingInstance.endProposalsRegistering({from: owner});
