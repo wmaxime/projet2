@@ -7,36 +7,26 @@ contract('Voting', accounts => {
     const voter1 = accounts[1];
     const voter2 = accounts[2];
     const voter3 = accounts[3];
-    //console.log("Address voter 3 : " + voter3)
 
     let VotingInstance
 
-    // Check deployed contract address, check first workflow status is RegisteringVoters
     describe("Check des GETTERS", function () {
 
         beforeEach(async function () {
             VotingInstance = await Voting.new({from:owner});
-            //await VotingInstance.addVoter(voter1, {from: owner});
-            //await VotingInstance.getVoter(voter1, {from: voter1});
         });
 
         it("Only Voter can get other Voter status", async () => {
-            await VotingInstance.addVoter(voter1, {from: owner});
             await expectRevert(VotingInstance.getVoter(voter1, {from: voter2}), "You're not a voter");
         });
 
         it("Check Voter is registred", async () => {
             await VotingInstance.addVoter(voter1, {from: owner});
             let getVoter = await VotingInstance.getVoter(voter1, {from: voter1});
-            //console.log("GET INSTANCE RESULT = " + getVoter.isRegistered);
             expect(getVoter.isRegistered).to.be.true;
         });
 
         it("Only Voter can get proposal ", async () => {
-            let description = "Poposal one"
-            await VotingInstance.addVoter(voter1, {from: owner});
-            await VotingInstance.startProposalsRegistering({from: owner});
-            await VotingInstance.addProposal(description, {from: voter1});
             await expectRevert(VotingInstance.getOneProposal(1, {from: voter2}), "You're not a voter");
         });
 
@@ -46,7 +36,6 @@ contract('Voting', accounts => {
             await VotingInstance.startProposalsRegistering({from: owner});
             await VotingInstance.addProposal(description, {from: voter1});
             let getProposal = await VotingInstance.getOneProposal(1, {from: voter1});
-            //console.log("GET INSTANCE RESULT = " + getProposal.description);
             expect(getProposal.description).to.be.equal(description);
         });    
 
@@ -98,15 +87,12 @@ contract('Voting', accounts => {
 
         it("Only voters can add proposal", async () => {
             let description = "Poposal one"
-            await VotingInstance.addVoter(voter1, {from: owner});
-            await VotingInstance.startProposalsRegistering({from: owner});
             await expectRevert(VotingInstance.addProposal(description, {from: voter2}), "You're not a voter");
         });
 
         it("Require : Workflow not good to add proposal", async () => {
             let description = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
-            //await VotingInstance.startProposalsRegistering({from: owner});
             await expectRevert(VotingInstance.addProposal(description, {from: voter1}), "Proposals are not allowed yet");
         });
 
@@ -145,22 +131,11 @@ contract('Voting', accounts => {
         });
 
         it("Only voters can vote", async () => {
-            let description1 = "Poposal one"
-            await VotingInstance.addVoter(voter1, {from: owner});
-            await VotingInstance.startProposalsRegistering({from: owner});
-            await VotingInstance.addProposal(description1, {from: voter1});
-            await VotingInstance.endProposalsRegistering({from: owner});
-            await VotingInstance.startVotingSession({from: owner});
             await expectRevert(VotingInstance.setVote(1, {from: voter2}), "You're not a voter");
         });
 
         it("Require : WorkflowStatus not good to vote", async () => {
-            let description1 = "Poposal one"
             await VotingInstance.addVoter(voter1, {from: owner});
-            await VotingInstance.startProposalsRegistering({from: owner});
-            await VotingInstance.addProposal(description1, {from: voter1});
-            await VotingInstance.endProposalsRegistering({from: owner});
-            //await VotingInstance.startVotingSession({from: owner});
             await expectRevert(VotingInstance.setVote(1, {from: voter1}), "Voting session havent started yet");
         });
 
@@ -240,8 +215,6 @@ contract('Voting', accounts => {
         });
 
         it("Require : precedent status should be RegisteringVoters (Index 0)", async () => {
-            //let status = await VotingInstance.workflowStatus({from: owner});
-            //console.log("STATUS VALUE = " + status)
             const storedData = await VotingInstance.workflowStatus({from: owner});
             expect(storedData).to.be.bignumber.equal(new BN(0));
         });
@@ -263,7 +236,6 @@ contract('Voting', accounts => {
         it("Check Emit : WorkflowStatusChange", async () => {
             const findEvent = await VotingInstance.startProposalsRegistering({from: owner});
             expectEvent(findEvent,"WorkflowStatusChange" ,{previousStatus: new BN(0), newStatus: new BN(1)});
-            //expectEvent(findEvent,"WorkflowStatusChange" ,{newStatus: BN(1)});
         });
     });
 
@@ -381,9 +353,6 @@ contract('Voting', accounts => {
         });
 
         it("Require : WorkflowStatus not good to tally votes", async () => {
-            await VotingInstance.startProposalsRegistering({from: owner});
-            await VotingInstance.endProposalsRegistering({from: owner});
-            await VotingInstance.startVotingSession({from: owner});
             await expectRevert(VotingInstance.tallyVotes({from: owner}), "Current status is not voting session ended");
         });
 
